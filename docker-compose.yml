@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  cache:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - redis-cluster-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    depends_on:
+      cache:
+        condition: service_healthy
+    ports:
+      - "5540:5540"
+    volumes:
+      - ./redisinsight/data:/data
+    networks:
+      - redis-cluster-net
+    environment:
+      - REDISINSIGHT_HOST=0.0.0.0
+
+networks:
+  redis-cluster-net:
+    driver: bridge
